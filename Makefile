@@ -1,4 +1,4 @@
-DIRS = queue set splay stack tst
+DIRS = collections queue set skip splay stack tst
 
 all: install
 

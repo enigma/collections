@@ -1,12 +1,11 @@
 package tst
 
 import (
+	. "github.com/badgerodon/collections"
 	"fmt"
 )
 
-type (
-	Any interface{}
-	
+type (	
 	node struct {
 		key byte
 		value Any
@@ -28,131 +27,6 @@ func New() *TernarySearchTree {
 	tree := &TernarySearchTree{}
 	tree.Init()
 	return tree
-}
-// Get the value at the specified key. Returns nil if not found.
-func (this *TernarySearchTree) Get(key string) Any {
-	if this.length == 0 {
-		return nil
-	}
-	
-	node := this.root
-	bs := []byte(key)
-	for i := 0; i < len(bs); {
-		b := bs[i]
-		if b > node.key {
-			if node.right == nil {
-				return nil
-			}
-			node = node.right
-		} else if (b < node.key) {
-			if node.left == nil {
-				return nil
-			}
-			node = node.left
-		} else {
-			i++
-			if i < len(bs) {
-				if node.middle == nil {
-					return nil
-				}
-				node = node.middle
-			} else {
-				break
-			}
-		}
-	}
-	return node.value
-}
-func (this *TernarySearchTree) GetLongestPrefix(prefix string) Any {
-	if this.length == 0 {
-		return nil
-	}
-	
-	n := this.root
-	v := n.value
-	bs := []byte(prefix)
-	for i := 0; i < len(bs); {
-		b := bs[i]
-		if n.value != nil {
-			v = n.value
-		}
-		if b > n.key {
-			if n.right == nil {
-				break
-			}
-			n = n.right
-		} else if b < n.key {
-			if n.left == nil {
-				break
-			}
-			n = n.left
-		} else {
-			i++
-			if i < len(bs) {
-				if n.middle == nil {
-					break
-				}
-				n = n.middle
-			} else {
-				break
-			}
-		}
-	}
-	if n.value != nil {
-		v = n.value
-	}
-	return v
-}
-// Test to see whether or not the given key is contained in the tree.
-func (this *TernarySearchTree) Has(key string) bool {
-	return this.Get(key) != nil
-}
-// Initialize the tree (reset it so that its empty). New will do this for you.
-func (this *TernarySearchTree) Init() {
-	this.length = 0
-	this.root = nil
-}
-// Insert a new key value pair into the collection
-func (this *TernarySearchTree) Insert(key string, value Any) {
-	// If the value is nil then remove this key from the collection
-	if value == nil {
-		this.Remove(key)
-		return
-	}
-
-	if this.length == 0 {
-		this.root = &node{0,nil,nil,nil,nil}
-	}
-	
-	t := this.root
-	bs := []byte(key)
-	for i := 0; i < len(bs); {
-		b := bs[i]
-		if b > t.key {
-			if t.right == nil {
-				t.right = &node{b,nil,nil,nil,nil}
-			}
-			t = t.right
-		} else if b < t.key {
-			if t.left == nil {
-				t.left = &node{b,nil,nil,nil,nil}
-			}
-			t = t.left
-		} else {
-			i++
-			if i < len(bs) {
-				if t.middle == nil {
-					t.middle = &node{bs[i],nil,nil,nil,nil}
-				}
-				t = t.middle				
-			}
-		}
-	}
-	
-	if t.value == nil {
-		this.length++
-	}
-	t.value = value
 }
 // Iterate over the collection
 func (this *TernarySearchTree) Do(f func(Any)bool) {
@@ -198,12 +72,130 @@ func (this *TernarySearchTree) Do(f func(Any)bool) {
 		}
 	}
 }
-func (this *TernarySearchTree) String() string {
+// Get the value at the specified key. Returns nil if not found.
+func (this *TernarySearchTree) Get(key string) Any {
 	if this.length == 0 {
-		return "{}"
+		return nil
 	}
 	
-	return this.root.String()
+	node := this.root
+	bs := []byte(key)
+	for i := 0; i < len(bs); {
+		b := bs[i]
+		if b > node.key {
+			if node.right == nil {
+				return nil
+			}
+			node = node.right
+		} else if (b < node.key) {
+			if node.left == nil {
+				return nil
+			}
+			node = node.left
+		} else {
+			i++
+			if i < len(bs) {
+				if node.middle == nil {
+					return nil
+				}
+				node = node.middle
+			} else {
+				break
+			}
+		}
+	}
+	return node.value
+}
+func (this *TernarySearchTree) GetLongestPrefix(key string) Any {
+	if this.length == 0 {
+		return nil
+	}
+	
+	n := this.root
+	v := n.value
+	bs := []byte(key)
+	for i := 0; i < len(bs); {
+		b := bs[i]
+		if n.value != nil {
+			v = n.value
+		}
+		if b > n.key {
+			if n.right == nil {
+				break
+			}
+			n = n.right
+		} else if b < n.key {
+			if n.left == nil {
+				break
+			}
+			n = n.left
+		} else {
+			i++
+			if i < len(bs) {
+				if n.middle == nil {
+					break
+				}
+				n = n.middle
+			} else {
+				break
+			}
+		}
+	}
+	if n.value != nil {
+		v = n.value
+	}
+	return v
+}
+// Test to see whether or not the given key is contained in the tree.
+func (this *TernarySearchTree) Has(key string) bool {
+	return this.Get(key) != nil
+}
+// Initialize the tree (reset it so that it's empty). New will do this for you.
+func (this *TernarySearchTree) Init() {
+	this.length = 0
+	this.root = nil
+}
+// Insert a new key value pair into the collection
+func (this *TernarySearchTree) Insert(key string, value Any) {
+	// If the value is nil then remove this key from the collection
+	if value == nil {
+		this.Remove(key)
+		return
+	}
+
+	if this.length == 0 {
+		this.root = &node{0,nil,nil,nil,nil}
+	}
+	
+	t := this.root
+	bs := []byte(key)
+	for i := 0; i < len(bs); {
+		b := bs[i]
+		if b > t.key {
+			if t.right == nil {
+				t.right = &node{b,nil,nil,nil,nil}
+			}
+			t = t.right
+		} else if b < t.key {
+			if t.left == nil {
+				t.left = &node{b,nil,nil,nil,nil}
+			}
+			t = t.left
+		} else {
+			i++
+			if i < len(bs) {
+				if t.middle == nil {
+					t.middle = &node{bs[i],nil,nil,nil,nil}
+				}
+				t = t.middle				
+			}
+		}
+	}
+	
+	if t.value == nil {
+		this.length++
+	}
+	t.value = value
 }
 // Get the number of items stored in the tree
 func (this *TernarySearchTree) Len() int {
@@ -275,7 +267,14 @@ func (this *TernarySearchTree) Remove(key string) Any {
 	this.length--
 	return t.value
 }
-// Dump the tree to a string for easier debuggin
+func (this *TernarySearchTree) String() string {
+	if this.length == 0 {
+		return "{}"
+	}
+	
+	return this.root.String()
+}
+// Dump the tree to a string for easier debugging
 func (this *node) String() string {
 	str := "{" + string(this.key)
 	if this.value != nil {
