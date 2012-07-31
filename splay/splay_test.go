@@ -6,7 +6,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	tree := New(func(a,b Any)bool {
+	tree := New(func(a,b interface{})bool {
 		return a.(string) < b.(string)
 	})
 	

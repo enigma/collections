@@ -6,9 +6,9 @@ type (
 	}
 )
 
-func GetRange(c Collection, start, length int) []Any {
+func GetRange(c Collection, start, length int) []interface{} {
 	end := start + length
-	items := make([]Any, length)
+	items := make([]interface{}, length)
 	i := 0
 	j := 0
 	c.Do(func(item interface{})bool{

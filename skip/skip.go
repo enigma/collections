@@ -1,56 +1,57 @@
 package skip
 
 import (
-	. "github.com/badgerodon/collections"
 	"fmt"
-	"rand"
+	"math/rand"
 	"time"
 )
 
 type (
 	node struct {
-		neighbors []*node
-		key Any
-		value Any
+		next []*node
+		key interface{}
+		value interface{}
 	}
 	SkipList struct {
 		root *node
 		size int
-		less func(Any,Any)bool
+		less func(interface{},interface{})bool
 		gen *rand.Rand
 		probability float64
 	}
 )
 // Create a new skip list
-func New(less func(Any,Any)bool) *SkipList {
-	gen := rand.New(rand.NewSource(time.Nanoseconds()))
+func New(less func(interface{},interface{})bool) *SkipList {
+	gen := rand.New(rand.NewSource(time.Now().UnixNano()))
 	n := &node{make([]*node, 0),nil,nil}
 	return &SkipList{n, 0, less, gen, 0.75}
 }
-func (this *SkipList) Do(f func(Any)bool) {
+func (this *SkipList) Do(f func(interface{}, interface{})bool) {
 	if this.size == 0 {
 		return
 	}
-	cur := this.root.neighbors[0]
+	cur := this.root.next[0]
 	for cur != nil {
-		if !f(cur.value) {
+		if !f(cur.key, cur.value) {
 			break
 		}
-		cur = cur.neighbors[0]
+		cur = cur.next[0]
 	}
 }
 // Get an item from the skip list
-func (this *SkipList) Get(key Any) Any {
+func (this *SkipList) Get(key interface{}) interface{} {
 	if this.size == 0 {
 		return nil
 	}
 	
 	cur := this.root
-	for i := len(cur.neighbors)-1; i >= 0; i-- {
-		for this.less(cur.neighbors[i].key, key) {
-			cur = cur.neighbors[i]
+	// Start at the top
+	for i := len(cur.next)-1; i >= 0; i-- {
+		for this.less(cur.next[i].key, key) {
+			cur = cur.next[i]
 		}
 	}
+	cur = cur.next[0]
 	
 	if this.equals(cur.key, key) {
 		return cur.value
@@ -59,47 +60,57 @@ func (this *SkipList) Get(key Any) Any {
 	return nil
 }
 // Insert a new item into the skip list
-func (this *SkipList) Insert(key Any, value Any) {
-	h := len(this.root.neighbors)
+func (this *SkipList) Insert(key interface{}, value interface{}) {
+	prev := this.getPrevious(key)
 	
-	updates := this.getUpdateTable(key)
-	
+	// Already in the list so just update the value
+	if len(prev) > 0 && prev[0].next[0] != nil && this.equals(prev[0].next[0].key, key) {
+		prev[0].next[0].value = value
+		return
+	}
+
+	h := len(this.root.next)	
 	nh := this.pickHeight()
 	n := &node{make([]*node, nh),key,value}
 	
+	// Higher than anything seen before, so tack it on top
 	if nh > h {
-		this.root.neighbors = append(this.root.neighbors, n)
-	}
+		this.root.next = append(this.root.next, n)
+	}	
 	
-	for i := 0; i < nh; i++ {
-		if i < h {
-			n.neighbors[i] = updates[i].neighbors[i]
-			updates[i].neighbors[i] = n
-		}
+	// Update the previous nodes
+	for i := 0; i < h && i < nh; i++ {
+		n.next[i] = prev[i].next[i]
+		prev[i].next[i] = n
 	}
 	
 	this.size++
 }
+// Get the length of the skip list
+func (this *SkipList) Len() int {
+	return this.size
+}
 // Remove an item from the skip list
-func (this *SkipList) Remove(key Any) Any {
-	updates := this.getUpdateTable(key)
-	cur := updates[0].neighbors[0]
+func (this *SkipList) Remove(key interface{}) interface{} {
+	prev := this.getPrevious(key)
+	if len(prev) == 0 {
+		return nil
+	}
+	cur := prev[0].next[0]
 	
 	// If we found it
 	if cur != nil && this.equals(key, cur.key) {
 		// Change all the linked lists
-		for i := 0; i < len(updates); i++ {
-			if this.equals(updates[i].neighbors[i].key, cur.key) {
-				updates[i].neighbors[i] = cur.neighbors[i]
-			} else {
-				break
+		for i := 0; i < len(prev); i++ {
+			if prev[i] != nil && prev[i].next[i] != nil {
+				prev[i].next[i] = cur.next[i]
 			}
 		}
 		
 		// Kill off the upper links if they're nil
-		for i := len(this.root.neighbors)-1; i>=0; i-- {
-			if this.root.neighbors[i] == nil {
-				this.root.neighbors = this.root.neighbors[:i]
+		for i := len(this.root.next)-1; i>=0; i-- {
+			if this.root.next[i] == nil {
+				this.root.next = this.root.next[:i]
 			} else {
 				break
 			}
@@ -115,14 +126,14 @@ func (this *SkipList) Remove(key Any) Any {
 // String representation of the list
 func (this *SkipList) String() string {	
 	str := "{"
-	if len(this.root.neighbors) > 0 {
-		cur := this.root.neighbors[0]
+	if len(this.root.next) > 0 {
+		cur := this.root.next[0]
 		for cur != nil {
 			str += fmt.Sprint(cur.key)
 			str += ":"
 			str += fmt.Sprint(cur.value)
 			str += " "
-			cur = cur.neighbors[0]
+			cur = cur.next[0]
 		}
 	}
 	str += "}"
@@ -131,20 +142,20 @@ func (this *SkipList) String() string {
 }
 // Get a vertical list of nodes of all the things that occur
 //  immediately before "key"
-func (this *SkipList) getUpdateTable(key Any) []*node {
+func (this *SkipList) getPrevious(key interface{}) []*node {
 	cur := this.root
-	h := len(cur.neighbors)
-	updates := make([]*node, h)
+	h := len(cur.next)
+	nodes := make([]*node, h)
 	for i := h-1; i >= 0; i-- {
-		for cur.neighbors[i] != nil && this.less(cur.neighbors[i].key, key) {
-			cur = cur.neighbors[i]
+		for cur.next[i] != nil && this.less(cur.next[i].key, key) {
+			cur = cur.next[i]
 		}
-		updates[i] = cur
+		nodes[i] = cur
 	}
-	return updates
+	return nodes
 }
 // Defines an equals method in terms of "less"
-func (this *SkipList) equals(a, b Any) bool {
+func (this *SkipList) equals(a, b interface{}) bool {
 	return !this.less(a,b) && !this.less(b,a)
 }
 // Pick a random height
@@ -153,7 +164,7 @@ func (this *SkipList) pickHeight() int {
 	for this.gen.Float64() > this.probability {
 		h++
 	}
-	if h > len(this.root.neighbors) {
+	if h > len(this.root.next) {
 		return h + 1
 	}
 	return h

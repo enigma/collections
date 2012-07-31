@@ -4,12 +4,10 @@ import (
 	"fmt"
 )
 
-type (
-	Any interface{}
-	
+type (	
 	node struct {
-		key Any
-		value Any
+		key interface{}
+		value interface{}
 		parent, left, right *node
 	}
 	nodei struct {
@@ -21,14 +19,17 @@ type (
 	SplayTree struct {
 		length int
 		root *node
-		less func(Any,Any)bool
+		less func(interface{},interface{})bool
 	}
 )
 
-func New(less func(Any,Any)bool) *SplayTree {
+// Create a new splay tree, using the less function to determine the order of 
+// they keys
+func New(less func(interface{},interface{})bool) *SplayTree {
 	return &SplayTree{0,nil,less}
 }
-func (this *SplayTree) Get(key Any) Any {
+// Get an item from the splay tree
+func (this *SplayTree) Get(key interface{}) interface{} {
 	if this.length == 0 {
 		return nil
 	}
@@ -50,14 +51,14 @@ func (this *SplayTree) Get(key Any) Any {
 	}
 	return nil
 }
-func (this *SplayTree) Has(key Any) bool {
+func (this *SplayTree) Has(key interface{}) bool {
 	return this.Get(key) != nil
 }
 func (this *SplayTree) Init() {
 	this.length = 0
 	this.root = nil
 }
-func (this *SplayTree) Insert(key Any, value Any) {
+func (this *SplayTree) Insert(key interface{}, value interface{}) {
 	if this.length == 0 {
 		this.root = &node{key,value,nil,nil,nil}
 		this.length = 1
@@ -93,7 +94,7 @@ func (this *SplayTree) Insert(key Any, value Any) {
 	}
 	this.splay(n)
 }
-func (this *SplayTree) PreOrder(f func(Any,Any)bool) {
+func (this *SplayTree) PreOrder(f func(interface{},interface{})bool) {
 	if this.length == 1 {
 		return
 	}
@@ -123,7 +124,7 @@ func (this *SplayTree) PreOrder(f func(Any,Any)bool) {
 		}
 	}
 }
-func (this *SplayTree) InOrder(f func(Any,Any)bool) {
+func (this *SplayTree) InOrder(f func(interface{},interface{})bool) {
 	if this.length == 1 {
 		return
 	}
@@ -153,7 +154,7 @@ func (this *SplayTree) InOrder(f func(Any,Any)bool) {
 		}
 	}
 }
-func (this *SplayTree) PostOrder(f func(Any,Any)bool) {
+func (this *SplayTree) PostOrder(f func(interface{},interface{})bool) {
 	if this.length == 1 {
 		return
 	}
@@ -183,13 +184,13 @@ func (this *SplayTree) PostOrder(f func(Any,Any)bool) {
 		}
 	}
 }
-func (this *SplayTree) Do(f func(Any,Any)bool) {
+func (this *SplayTree) Do(f func(interface{},interface{})bool) {
 	this.InOrder(f)
 }
 func (this *SplayTree) Len() int {
 	return this.length
 }
-func (this *SplayTree) Remove(key Any) {
+func (this *SplayTree) Remove(key interface{}) {
 	if this.length == 0 {
 		return
 	}
