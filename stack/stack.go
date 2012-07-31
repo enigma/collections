@@ -1,7 +1,6 @@
 package stack
 
 type (
-	Any interface{}
 	Stack struct {
 		top *node
 		length int
@@ -20,14 +19,14 @@ func (this *Stack) Len() int {
 	return this.length
 }
 // View the top item on the stack
-func (this *Stack) Peek() Any {
+func (this *Stack) Peek() interface{} {
 	if this.length == 0 {
 		return nil
 	}
 	return this.top.value
 }
 // Pop the top item of the stack and return it
-func (this *Stack) Pop() Any {
+func (this *Stack) Pop() interface{} {
 	if this.length == 0 {
 		return nil
 	}
@@ -38,7 +37,7 @@ func (this *Stack) Pop() Any {
 	return n.value
 }
 // Push a value onto the top of the stack
-func (this *Stack) Push(value Any) {
+func (this *Stack) Push(value interface{}) {
 	n := &node{value,this.top}
 	this.top = n
 	this.length++

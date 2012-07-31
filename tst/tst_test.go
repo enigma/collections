@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestCases(t *testing.T) {
+func Test(t *testing.T) {
 	tree := New()
 	tree.Insert("test", 1)
 	if tree.Len() != 1 {

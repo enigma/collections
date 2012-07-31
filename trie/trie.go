@@ -1,21 +1,18 @@
 package trie
 
 import (
-	//"fmt"
+	"fmt"
 )
 
 type (
-	Action func([]byte,Any)bool
-	Any interface{}
-	
 	Trie struct {
 		root *node
-		length int
+		size int
 	}
 	node struct {
-		value Any
-		key byte
-		children [256]*node
+		key interface{}
+		value interface{}
+		next [256]*node
 	}
 	iterator struct {
 		step int
@@ -24,113 +21,128 @@ type (
 	}
 )
 
+func toBytes(obj interface{}) []byte {
+	switch o := obj.(type) {
+	case []byte:
+		return o
+	case string:
+		return []byte(o)
+	}
+	return []byte(fmt.Sprint(obj))
+}
+
 func New() *Trie {
 	return &Trie{nil,0}
 }
-func (this *Trie) Do(action Action) {
-	InOrder(action)
+func (this *Trie) Do(handler func(interface{},interface{})bool) {
+	if this.size > 0 {
+		this.root.do(handler)
+	}
 }
-func (this *Trie) Get(key []byte) Any {
-
+func (this *Trie) Get(key interface{}) interface{} {
+	if this.size == 0 {
+		return nil
+	}
+	
+	bs := toBytes(key)
+	cur := this.root
+	for i := 0; i < len(bs); i++ {
+		if cur.next[bs[i]] != nil {
+			cur = cur.next[bs[i]]
+		} else {
+			return nil
+		}
+	}
+	return cur.value
 }
-func (this *Trie) Has(key []byte) bool {
-
+func (this *Trie) Has(key interface{}) bool {
+	return this.Get(key) != nil
 }
 func (this *Trie) Init() {
 	this.root = nil
-	this.length = 0
+	this.size = 0
 }
-func (this *Trie) InOrder(action Action) {
-
-}
-func (this *Trie) Insert(key []byte, value Any) {
-
+func (this *Trie) Insert(key interface{}, value interface{}) {
+	if this.size == 0 {
+		this.root = newNode()
+	}
+	
+	bs := toBytes(key)
+	cur := this.root
+	for i := 0; i < len(bs); i++ {
+		if cur.next[bs[i]] != nil {
+			cur = cur.next[bs[i]]
+		} else {
+			cur.next[bs[i]] = newNode()
+			cur = cur.next[bs[i]]
+		}
+	}	
+	if cur.key == nil {
+		this.size++
+	}
+	cur.key = key
+	cur.value = value
 }
 func (this *Trie) Len() int {
-	return this.length
+	return this.size
 }
-func (this *Trie) PostOrder(action Action) {
-
-}
-func (this *Trie) PreOrder(action Action) {
-	if this.length == 0 {
-		return
+func (this *Trie) Remove(key interface{}) interface{} {
+	if this.size == 0 {
+		return nil
+	}
+	bs := toBytes(key)
+	cur := this.root
+	
+	for i := 0; i < len(bs); i++ {
+		if cur.next[bs[i]] != nil {
+			cur = cur.next[bs[i]]
+		} else {
+			return nil
+		}
 	}
 	
-	d := 0
-	i := &iterator{0,this.root,nil}
-	for i != nil {
-		if i.node.value != nil {
-			bs := make([]byte, d)
-			t := i
-			for j := d; j >= 0; j-- {
-				bs[j] = t.node.key
-				t = i.prev
-			}
-			action(bs, i.node.value)
-		}
-		for i.step < 256; i.step++ {
-			c := i.node.children[j]
-			if c != nil {
-				i = &iterator{0,c,i}
-				d++
-				break
-			}
-		}
-		i = i.prev
-		d--
-	}	
-}
-func (this *Trie) Remove() {
+	// TODO: cleanup dead nodes
 	
-}
-
-
-
-
-// Add an entry to the trie
-func (this *Trie) Add(key string, value interface{}) {
-	t := this
-	k := []byte(key)
-	for _, b := range k {
-		if t.children == nil {
-			t.children = make(map[byte]*Trie)
-		}
-		n, ok := t.children[b]
-		if !ok {
-			n = &Trie{nil,nil}
-			t.children[b] = n
-		}
-		t = n
+	val := cur.value
+	
+	if cur.value != nil {
+		this.size--
+		cur.value = nil
+		cur.key = nil
 	}
-	t.value = value
+	return val
+}
+func (this *Trie) String() string {
+	str := "{"
+	i := 0
+	this.Do(func(k, v interface{}) bool {
+		if i > 0 {
+			str += ", "
+		}
+		str += fmt.Sprint(k, ":", v)
+		i++
+		return true
+	})
+	str += "}"
+	return str
 }
 
-// Find an entry in the trie
-func (this *Trie) Get(key string, exact bool) interface{} {
-	t := this
-	var v interface{}
-	var ok bool
-	k := []byte(key)
-	for _, b := range k {
-		if t.value != nil {
-			v = t.value
-		}
-		if t.children == nil {
-			if exact { 
-				return nil
-			} else {
-				return v
+func newNode() *node {
+	var next [256]*node
+	return &node{nil,nil,next}
+}
+func (this *node) do(handler func(interface{}, interface{}) bool) bool {
+	for i := 0; i < 256; i++ {
+		if this.next[i] != nil {
+			if this.next[i].key != nil {
+				if !handler(this.next[i].key, this.next[i].value) {
+					return false
+				}
 			}
-		}
-		t, ok = t.children[b]
-		if !ok {
-			if exact {
-				return nil
-			} else {
-				return v
+			if !this.next[i].do(handler) {
+				return false
 			}
 		}
 	}
-	return t.value
+	return true
 }
