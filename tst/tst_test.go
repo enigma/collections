@@ -19,7 +19,7 @@ func TestCases(t *testing.T) {
 	tree.Insert("abcd", 0)
 		
 	found := false
-	tree.Do(func(test Any)bool {
+	tree.Do(func(test interface{})bool {
 		if test.(int) == 1 {
 			found = true
 		}

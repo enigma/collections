@@ -1,14 +1,13 @@
 package tst
 
 import (
-	. "github.com/badgerodon/collections"
 	"fmt"
 )
 
 type (	
 	node struct {
 		key byte
-		value Any
+		value interface{}
 		left, middle, right *node
 	}
 	nodei struct {
@@ -29,7 +28,7 @@ func New() *TernarySearchTree {
 	return tree
 }
 // Iterate over the collection
-func (this *TernarySearchTree) Do(f func(Any)bool) {
+func (this *TernarySearchTree) Do(f func(interface{})bool) {
 	if this.Len() == 0 {
 		return
 	}
@@ -73,7 +72,7 @@ func (this *TernarySearchTree) Do(f func(Any)bool) {
 	}
 }
 // Get the value at the specified key. Returns nil if not found.
-func (this *TernarySearchTree) Get(key string) Any {
+func (this *TernarySearchTree) Get(key string) interface{} {
 	if this.length == 0 {
 		return nil
 	}
@@ -106,7 +105,7 @@ func (this *TernarySearchTree) Get(key string) Any {
 	}
 	return node.value
 }
-func (this *TernarySearchTree) GetLongestPrefix(key string) Any {
+func (this *TernarySearchTree) GetLongestPrefix(key string) interface{} {
 	if this.length == 0 {
 		return nil
 	}
@@ -156,7 +155,7 @@ func (this *TernarySearchTree) Init() {
 	this.root = nil
 }
 // Insert a new key value pair into the collection
-func (this *TernarySearchTree) Insert(key string, value Any) {
+func (this *TernarySearchTree) Insert(key string, value interface{}) {
 	// If the value is nil then remove this key from the collection
 	if value == nil {
 		this.Remove(key)
@@ -202,7 +201,7 @@ func (this *TernarySearchTree) Len() int {
 	return this.length
 }
 // Remove a key from the collection
-func (this *TernarySearchTree) Remove(key string) Any {
+func (this *TernarySearchTree) Remove(key string) interface{} {
 	if this.length == 0 {
 		return nil
 	}
