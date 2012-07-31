@@ -1,16 +1,15 @@
 package set
 
 type (
-	Any interface{}	
 	Set struct {
-		hash map[Any]nothing
+		hash map[interface{}]nothing
 	}
 	
 	nothing struct{}
 )
 // Create a new set
-func New(initial ...Any) *Set {
-	s := &Set{make(map[Any]nothing)}
+func New(initial ...interface{}) *Set {
+	s := &Set{make(map[interface{}]nothing)}
 	
 	for _, v := range initial {
 		s.Insert(v)
@@ -20,7 +19,7 @@ func New(initial ...Any) *Set {
 }
 // Find the difference between two sets
 func (this *Set) Difference(set *Set) *Set {
-	n := make(map[Any]nothing)
+	n := make(map[interface{}]nothing)
 	
 	for k, _ := range this.hash {
 		if _, exists := set.hash[k]; !exists {
@@ -31,17 +30,17 @@ func (this *Set) Difference(set *Set) *Set {
 	return &Set{n}
 }
 // Test to see whether or not the element is in the set
-func (this *Set) Has(element Any) bool {
+func (this *Set) Has(element interface{}) bool {
 	_, exists := this.hash[element]
 	return exists
 }
 // Add an element to the set
-func (this *Set) Insert(element Any) {
+func (this *Set) Insert(element interface{}) {
 	this.hash[element] = nothing{}
 }
 // Find the intersection of two sets
 func (this *Set) Intersection(set *Set) *Set {
-	n := make(map[Any]nothing)
+	n := make(map[interface{}]nothing)
 	
 	for k, _ := range this.hash {
 		if _, exists := set.hash[k]; exists {
@@ -60,8 +59,8 @@ func (this *Set) ProperSubsetOf(set *Set) bool {
 	return this.SubsetOf(set) && this.Len() < set.Len()
 }
 // Remove an element from the set
-func (this *Set) Remove(element Any) {
-	this.hash[element] = nothing{}, false
+func (this *Set) Remove(element interface{}) {
+	delete(this.hash, element)
 }
 // Test whether or not this set is a subset of "set"
 func (this *Set) SubsetOf(set *Set) bool {
@@ -77,7 +76,7 @@ func (this *Set) SubsetOf(set *Set) bool {
 }
 // Find the union of two sets
 func (this *Set) Union(set *Set) *Set {
-	n := make(map[Any]nothing)
+	n := make(map[interface{}]nothing)
 	
 	for k, _ := range this.hash {
 		n[k] = nothing{}
