@@ -5,20 +5,20 @@ import (
 )
 
 type (	
-	node struct {
+	Node struct {
 		key byte
 		value interface{}
-		left, middle, right *node
+		left, middle, right *Node
 	}
-	nodei struct {
+	NodeIterator struct {
 		step int
-		node *node
-		prev *nodei
+		node *Node
+		prev *NodeIterator
 	}
 	TernarySearchTree struct {
 		length int
-		root *node
-	}	
+		root *Node
+	}
 )
 
 // Create a new ternary search tree
@@ -28,25 +28,29 @@ func New() *TernarySearchTree {
 	return tree
 }
 // Iterate over the collection
-func (this *TernarySearchTree) Do(f func(interface{})bool) {
+func (this *TernarySearchTree) Do(callback func(string, interface{})bool) {
 	if this.Len() == 0 {
 		return
 	}
-	i := &nodei{0,this.root,nil}
+	str := ""
+	i := &NodeIterator{0,this.root,nil}
 	for i != nil {
 		switch i.step {
 		// Left
 		case 0:
+			if i.node.key > 0 {
+				str += string(i.node.key)
+			}
 			i.step++
 			if i.node.left != nil {
-				i = &nodei{0,i.node.left,i}
+				i = &NodeIterator{0,i.node.left,i}
 				continue
 			}
 		// Value
 		case 1:
 			i.step++
 			if i.node.value != nil {
-				if !f(i.node.value) {
+				if !callback(str, i.node.value) {
 					break
 				}
 				continue
@@ -55,19 +59,22 @@ func (this *TernarySearchTree) Do(f func(interface{})bool) {
 		case 2:
 			i.step++
 			if i.node.middle != nil {
-				i = &nodei{0,i.node.middle,i}
+				i = &NodeIterator{0,i.node.middle,i}
 				continue
 			}
 		// Right
 		case 3:
 			i.step++
 			if i.node.right != nil {
-				i = &nodei{0,i.node.right,i}
+				i = &NodeIterator{0,i.node.right,i}
 				continue
 			}
 		// Backtrack
 		case 4:
 			i = i.prev
+			if len(str) > 0 {
+				str = str[:len(str)-1]
+			}
 		}
 	}
 }
@@ -163,7 +170,7 @@ func (this *TernarySearchTree) Insert(key string, value interface{}) {
 	}
 
 	if this.length == 0 {
-		this.root = &node{0,nil,nil,nil,nil}
+		this.root = &Node{0,nil,nil,nil,nil}
 	}
 	
 	t := this.root
@@ -172,19 +179,19 @@ func (this *TernarySearchTree) Insert(key string, value interface{}) {
 		b := bs[i]
 		if b > t.key {
 			if t.right == nil {
-				t.right = &node{b,nil,nil,nil,nil}
+				t.right = &Node{b,nil,nil,nil,nil}
 			}
 			t = t.right
 		} else if b < t.key {
 			if t.left == nil {
-				t.left = &node{b,nil,nil,nil,nil}
+				t.left = &Node{b,nil,nil,nil,nil}
 			}
 			t = t.left
 		} else {
 			i++
 			if i < len(bs) {
 				if t.middle == nil {
-					t.middle = &node{bs[i],nil,nil,nil,nil}
+					t.middle = &Node{bs[i],nil,nil,nil,nil}
 				}
 				t = t.middle				
 			}
@@ -206,7 +213,7 @@ func (this *TernarySearchTree) Remove(key string) interface{} {
 		return nil
 	}
 	
-	var remove *node
+	var remove *Node
 	var direction int
 	
 	t := this.root
@@ -274,7 +281,7 @@ func (this *TernarySearchTree) String() string {
 	return this.root.String()
 }
 // Dump the tree to a string for easier debugging
-func (this *node) String() string {
+func (this *Node) String() string {
 	str := "{" + string(this.key)
 	if this.value != nil {
 		str += ":" + fmt.Sprint(this.value)
