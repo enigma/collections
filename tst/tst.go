@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-type (	
+type (
 	Node struct {
 		key byte
 		value interface{}
@@ -32,15 +32,12 @@ func (this *TernarySearchTree) Do(callback func(string, interface{})bool) {
 	if this.Len() == 0 {
 		return
 	}
-	str := ""
+	bs := []byte{}
 	i := &NodeIterator{0,this.root,nil}
 	for i != nil {
 		switch i.step {
 		// Left
 		case 0:
-			if i.node.key > 0 {
-				str += string(i.node.key)
-			}
 			i.step++
 			if i.node.left != nil {
 				i = &NodeIterator{0,i.node.left,i}
@@ -49,9 +46,12 @@ func (this *TernarySearchTree) Do(callback func(string, interface{})bool) {
 		// Value
 		case 1:
 			i.step++
+			if i.node.key > 0 {
+				bs = append(bs, i.node.key)
+			}
 			if i.node.value != nil {
-				if !callback(str, i.node.value) {
-					break
+				if !callback(string(bs), i.node.value) {
+					return
 				}
 				continue
 			}
@@ -64,6 +64,9 @@ func (this *TernarySearchTree) Do(callback func(string, interface{})bool) {
 			}
 		// Right
 		case 3:
+			if len(bs) > 0 {
+				bs = bs[:len(bs)-1]
+			}
 			i.step++
 			if i.node.right != nil {
 				i = &NodeIterator{0,i.node.right,i}
@@ -72,9 +75,6 @@ func (this *TernarySearchTree) Do(callback func(string, interface{})bool) {
 		// Backtrack
 		case 4:
 			i = i.prev
-			if len(str) > 0 {
-				str = str[:len(str)-1]
-			}
 		}
 	}
 }
@@ -83,7 +83,7 @@ func (this *TernarySearchTree) Get(key string) interface{} {
 	if this.length == 0 {
 		return nil
 	}
-	
+
 	node := this.root
 	bs := []byte(key)
 	for i := 0; i < len(bs); {
@@ -116,7 +116,7 @@ func (this *TernarySearchTree) GetLongestPrefix(key string) interface{} {
 	if this.length == 0 {
 		return nil
 	}
-	
+
 	n := this.root
 	v := n.value
 	bs := []byte(key)
@@ -172,7 +172,7 @@ func (this *TernarySearchTree) Insert(key string, value interface{}) {
 	if this.length == 0 {
 		this.root = &Node{0,nil,nil,nil,nil}
 	}
-	
+
 	t := this.root
 	bs := []byte(key)
 	for i := 0; i < len(bs); {
@@ -193,11 +193,11 @@ func (this *TernarySearchTree) Insert(key string, value interface{}) {
 				if t.middle == nil {
 					t.middle = &Node{bs[i],nil,nil,nil,nil}
 				}
-				t = t.middle				
+				t = t.middle
 			}
 		}
 	}
-	
+
 	if t.value == nil {
 		this.length++
 	}
@@ -212,13 +212,13 @@ func (this *TernarySearchTree) Remove(key string) interface{} {
 	if this.length == 0 {
 		return nil
 	}
-	
+
 	var remove *Node
 	var direction int
-	
+
 	t := this.root
 	bs := []byte(key)
-	for i := 0; i < len(bs); {	
+	for i := 0; i < len(bs); {
 		b := bs[i]
 		if b > t.key {
 			// Not in the collection
@@ -257,7 +257,7 @@ func (this *TernarySearchTree) Remove(key string) interface{} {
 			}
 		}
 	}
-	
+
 	// If this was the only item in the tree, set the root pointer to nil
 	if this.length == 1 {
 		this.root = nil
@@ -277,7 +277,7 @@ func (this *TernarySearchTree) String() string {
 	if this.length == 0 {
 		return "{}"
 	}
-	
+
 	return this.root.String()
 }
 // Dump the tree to a string for easier debugging
